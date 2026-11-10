@@ -1,0 +1,36 @@
+# Cloudflare Pages response headers (https://developers.cloudflare.com/pages/configuration/headers/)
+# SECURITY: these are real HTTP headers, so frame-ancestors / X-Frame-Options / HSTS work here,
+# unlike the <meta> CSP in the HTML (kept as defence in depth). Keep both CSPs identical
+# except for frame-ancestors, which only works as a header.
+
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests; require-trusted-types-for 'script'; trusted-types app-sw; frame-ancestors 'none'
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), interest-cohort=(), browsing-topics=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+
+# Hashed build assets never change: cache for a year.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Service worker scripts get their own CSP: a worker cannot create a Trusted Types
+# policy for Workbox's importScripts(), so the page policy would stop it from
+# installing (and offline support would silently fail). The worker may still only
+# load scripts and fetch from this origin.
+/sw.js
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'none'; script-src 'self'; connect-src 'self'
+  Cache-Control: no-cache
+
+/workbox-*.js
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'none'; script-src 'self'; connect-src 'self'
+
+# SEO: keep the *.pages.dev copies (production and previews) out of search results;
+# only https://containercheck.app is indexed.
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex

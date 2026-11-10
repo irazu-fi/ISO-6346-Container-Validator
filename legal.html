@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <!-- SECURITY: same strict CSP as the app (see index.html and public/_headers). -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests; require-trusted-types-for 'script'; trusted-types app-sw" />
+  <meta name="referrer" content="no-referrer" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacy &amp; Legal Notice · ContainerCheck</title>
+  <meta name="description" content="Privacy policy, legal notice and accessibility information for ContainerCheck, the ISO 6346 container check digit validator." />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="canonical" href="https://containercheck.app/legal" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <!-- Anti-clickjacking + OS theme (same-origin, SRI added at build time). -->
+  <script src="/security-init.js"></script>
+  <link rel="stylesheet" href="/src/styles.css" />
+</head>
+
+<body class="min-h-screen bg-slate-100 font-sans text-slate-800 antialiased dark:bg-slate-950 dark:text-slate-200">
+  <header class="bg-navy text-white">
+    <div class="mx-auto max-w-3xl px-4 py-6 sm:px-6">
+      <a href="/" class="font-semibold underline-offset-4 hover:underline">← ContainerCheck</a>
+      <h1 class="mt-6 text-3xl font-extrabold tracking-tight">Privacy &amp; Legal Notice</h1>
+      <p class="mt-2 text-slate-300">Last updated: 10 November 2026</p>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+    <div class="space-y-10 leading-relaxed [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-slate-900 dark:[&_h2]:text-white [&_p]:mt-3 [&_li]:mt-1.5 [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:pl-6 [&_a]:font-semibold [&_a]:text-sky-800 [&_a]:underline dark:[&_a]:text-cyan-300">
+
+      <section aria-labelledby="summary">
+        <h2 id="summary">In short</h2>
+        <ul>
+          <li>Container numbers you type or paste are checked <strong>only in your browser</strong>. They are never sent to a server.</li>
+          <li>ContainerCheck uses <strong>no cookies, no analytics and no tracking</strong>, and it loads nothing from third parties.</li>
+          <li>The only personal data involved is the technical data your browser sends to the hosting provider when it loads the site, such as your IP address.</li>
+        </ul>
+      </section>
+
+      <section aria-labelledby="controller">
+        <h2 id="controller">Who is responsible</h2>
+        <p>
+          ContainerCheck is a non-commercial project run by a private individual:<br />
+          <strong>José Oldemar Chaves Urbina</strong>, Finland<br />
+          Email: <a href="mailto:jose.chaves@irazu.fi">jose.chaves@irazu.fi</a>
+        </p>
+        <p>He is the data controller under the EU General Data Protection Regulation (GDPR) and the Finnish Data Protection Act (1050/2018).</p>
+      </section>
+
+      <section aria-labelledby="hosting">
+        <h2 id="hosting">Hosting and server logs</h2>
+        <p>
+          The site is delivered by <strong>Cloudflare</strong> (Cloudflare Pages). When your browser loads a page, Cloudflare processes the
+          technical data needed to deliver it and protect it against attacks: your IP address, the date and time, the requested URL,
+          your browser's user-agent and similar request data.
+        </p>
+        <ul>
+          <li><strong>Purpose:</strong> delivering the website securely and reliably.</li>
+          <li><strong>Legal basis:</strong> legitimate interest, GDPR Article 6(1)(f).</li>
+          <li><strong>Processor:</strong> Cloudflare acts as a processor under its data processing addendum. Some processing may take place outside the EU/EEA. Cloudflare covers these transfers with the European Commission's Standard Contractual Clauses and its certification under the EU–U.S. Data Privacy Framework.</li>
+          <li><strong>Retention:</strong> the site owner does not collect or keep these logs. Cloudflare keeps them only as long as it needs them for delivery and security, as described in the <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener noreferrer">Cloudflare privacy policy</a>.</li>
+        </ul>
+      </section>
+
+      <section aria-labelledby="device">
+        <h2 id="device">What is stored on your device</h2>
+        <p>
+          ContainerCheck sets no cookies and does not use localStorage, sessionStorage or IndexedDB. To work offline, your browser keeps a copy of the site's
+          own files (HTML, styles, scripts, fonts and icons) in its cache through a service worker. This copy contains <strong>no personal data</strong>
+          and nothing you typed. It is only used to show this site. You can delete it at any time from your browser's site settings.
+        </p>
+      </section>
+
+      <section aria-labelledby="rights">
+        <h2 id="rights">Your rights</h2>
+        <p>
+          You have the right to request access to, rectification or erasure of your personal data. You can also ask to restrict its processing, and you can object to it.
+          Because the site owner holds no personal data about visitors, most requests concern Cloudflare's technical logs. Contact the email above and
+          your request will be answered within one month.
+        </p>
+        <p>
+          You can also lodge a complaint with the Finnish supervisory authority, the
+          <a href="https://tietosuoja.fi/en" rel="noopener noreferrer">Data Protection Ombudsman</a> (Tietosuojavaltuutetun toimisto).
+        </p>
+      </section>
+
+      <section aria-labelledby="notice">
+        <h2 id="notice">Legal notice and disclaimer</h2>
+        <ul>
+          <li>ContainerCheck is a free tool provided as is, without warranty. Check results against your official shipping documents before relying on them.</li>
+          <li>The tool checks the ISO 6346 check digit and format only. It <strong>does not check</strong> whether an owner code is registered in the BIC Code register.</li>
+          <li>ContainerCheck is not affiliated with the Bureau International des Containers (BIC) or with ISO. BIC and ISO are trademarks of their respective owners.</li>
+          <li>The source code is published under the MIT License.</li>
+        </ul>
+      </section>
+
+      <section aria-labelledby="a11y">
+        <h2 id="a11y">Accessibility</h2>
+        <p>
+          ContainerCheck aims to meet WCAG 2.2 level AA. If something does not work for you with a keyboard, screen reader, zoom or print,
+          please write to <a href="mailto:jose.chaves@irazu.fi">jose.chaves@irazu.fi</a>.
+        </p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+    <div class="mx-auto max-w-3xl px-4 py-6 text-sm text-slate-600 dark:text-slate-300 sm:px-6">
+      <a href="/" class="font-semibold text-slate-800 underline underline-offset-2 dark:text-slate-100">Back to ContainerCheck</a>
+    </div>
+  </footer>
+</body>
+</html>

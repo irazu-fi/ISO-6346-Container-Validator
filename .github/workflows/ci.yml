@@ -1,0 +1,42 @@
+# Continuous integration: audit + build on every push and pull request.
+# Deployment is done by Cloudflare Pages (Git integration), which builds `main`
+# into https://containercheck.app. This workflow only proves the build is healthy;
+# it has no deploy permissions and uses no secrets.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      # Exact versions from package-lock.json; no install scripts from deps.
+      - run: npm ci --ignore-scripts
+
+      # Fail on any high/critical advisory (accepted low risks: see SECURITY.md).
+      - run: npm audit --audit-level=high
+
+      - run: npm run build
+
+      # The production headers file must be part of the build output.
+      - run: test -f dist/_headers && test -f dist/legal.html && test -f dist/sitemap.xml

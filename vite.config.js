@@ -1,11 +1,15 @@
 import { createHash } from 'node:crypto'
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const root = fileURLToPath(new URL('.', import.meta.url))
 import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-const BASE = '/ISO-6346-Container-Validator/'
+// Served from the root of https://containercheck.app (Cloudflare Pages).
+const BASE = '/'
 
 /**
  * SECURITY · Subresource Integrity (SRI).
@@ -64,6 +68,8 @@ function devRelaxCsp() {
 
 export default defineConfig({
   base: BASE,
+  // Multi-page app: no SPA fallback, so /legal is not answered with index.html.
+  appType: 'mpa',
   plugins: [
     tailwindcss(),
     devRelaxCsp(),
@@ -79,17 +85,43 @@ export default defineConfig({
         description: 'ISO 6346 container check digit calculator and validator',
         theme_color: '#0f172a',
         background_color: '#0f172a',
+        id: '/',
+        start_url: '/',
+        scope: '/',
         display: 'standalone',
         icons: [
           { src: 'android-chrome-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
           { src: 'android-chrome-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
       },
-      workbox: { globPatterns: ['**/*.{js,css,html,woff2,png,ico,svg}'] },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,woff2,png,ico,svg}'],
+        // Not an SPA: let each page (index.html, legal.html) be served as itself.
+        navigateFallback: null,
+        // Cloudflare Pages serves pages at clean URLs and answers /index.html and
+        // /legal.html with a 308 redirect. Workbox refuses redirected responses, so
+        // precache the final URLs instead, otherwise offline support silently fails.
+        manifestTransforms: [
+          (entries) => ({
+            manifest: entries.map((e) =>
+              e.url === 'index.html' ? { ...e, url: '/' }
+                : e.url.endsWith('.html') ? { ...e, url: '/' + e.url.replace(/\.html$/, '') }
+                  : e),
+            warnings: [],
+          }),
+        ],
+      },
     }),
     subresourceIntegrity(),
   ],
   build: {
+    // Two pages: the app and the privacy / legal notice.
+    rollupOptions: {
+      input: {
+        main: resolve(root, 'index.html'),
+        legal: resolve(root, 'legal.html'),
+      },
+    },
     // SECURITY: never inline assets as data: URIs (CSP allows only 'self').
     assetsInlineLimit: 0,
     // No inline modulepreload polyfill.

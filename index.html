@@ -20,7 +20,8 @@
     ║ - base-uri / form-action /  → block <base> hijacking, form       ║
     ║   object-src 'none'           exfiltration and plugins.          ║
     ║ NOTE: frame-ancestors, report-uri and sandbox are ignored in a   ║
-    ║ <meta> CSP by spec. See SECURITY.md for the HTTP-header version. ║
+    ║ <meta> CSP by spec. Production (Cloudflare Pages) also sends the ║
+    ║ same policy + frame-ancestors as HTTP headers: public/_headers.  ║
     ║ The dev server strips this tag (Vite HMR needs inline styles);   ║
     ║ it is always present in the production build.                    ║
     ╚══════════════════════════════════════════════════════════════════╝
@@ -44,9 +45,24 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
 
-  <meta property="og:title" content="Container Check Digit · ISO 6346 Validator" />
-  <meta property="og:description" content="Validate shipping container numbers in real time or in bulk." />
+  <!-- SEO: one canonical URL on the custom domain (pages.dev copies are noindex via _headers) -->
+  <link rel="canonical" href="https://containercheck.app/" />
+
+  <!-- Social previews (Open Graph + Twitter/X). Image is a same-origin static file. -->
   <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ContainerCheck" />
+  <meta property="og:url" content="https://containercheck.app/" />
+  <meta property="og:title" content="Container Check Digit · ISO 6346 Validator" />
+  <meta property="og:description" content="Validate shipping container numbers in real time or in bulk. Runs entirely in your browser." />
+  <meta property="og:image" content="https://containercheck.app/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="ContainerCheck: ISO 6346 container number CSQU 305438 3 with its check digit highlighted" />
+  <meta property="og:locale" content="en_GB" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Container Check Digit · ISO 6346 Validator" />
+  <meta name="twitter:description" content="Validate shipping container numbers in real time or in bulk. Runs entirely in your browser." />
+  <meta name="twitter:image" content="https://containercheck.app/og-image.png" />
 
   <!--
     SECURITY · Anti-clickjacking + theme bootstrap.
@@ -264,6 +280,7 @@
       <p class="text-slate-500 dark:text-slate-400">
         Designed &amp; built by <span class="font-semibold text-slate-800 dark:text-slate-100">José Oldemar Chaves Urbina</span>
         · <span id="year"></span>
+        · <a href="/legal" class="font-semibold text-slate-700 underline underline-offset-2 hover:text-sky-800 dark:text-slate-200 dark:hover:text-cyan-300">Privacy &amp; legal notice</a>
       </p>
       <div class="flex items-center gap-2">
         <a href="https://github.com/OldemarCRC" target="_blank" rel="noopener noreferrer" aria-label="GitHub" title="GitHub"

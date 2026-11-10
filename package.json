@@ -1,7 +1,7 @@
 {
   "name": "sea-container-check-digit",
   "version": "1.0.0",
-  "homepage": "https://irazu-fi.github.io/ISO-6346-Container-Validator",
+  "homepage": "https://containercheck.app",
   "private": true,
   "type": "module",
   "scripts": {

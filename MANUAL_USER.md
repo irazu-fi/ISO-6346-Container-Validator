@@ -10,7 +10,7 @@ ContainerCheck verifies shipping container numbers against the **ISO 6346** stan
 
 The app runs entirely in your browser. Nothing you type is sent to a server or saved.
 
-Open it at **https://irazu-fi.github.io/ISO-6346-Container-Validator/**
+Open it at **https://containercheck.app/**
 
 ---
 
@@ -88,8 +88,8 @@ Use it to check many numbers at once.
 
 - **Dark mode**: the app follows your system theme. Use the moon or sun button in the top-right to switch it for the current visit.
 - **Shareable links**:
-  - `https://irazu-fi.github.io/ISO-6346-Container-Validator/?c=CSQU3054383` opens Single mode with that number filled in.
-  - `https://irazu-fi.github.io/ISO-6346-Container-Validator/#bulk` opens Bulk mode directly.
+  - `https://containercheck.app/?c=CSQU3054383` opens Single mode with that number filled in.
+  - `https://containercheck.app/#bulk` opens Bulk mode directly.
 - **Install as an app**: in Chrome or Edge, use **Install app** in the address bar. On a phone, use **Add to Home Screen**. Once installed, it also works offline.
 
 ---

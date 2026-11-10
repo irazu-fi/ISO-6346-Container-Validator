@@ -9,36 +9,47 @@ ContainerCheck runs entirely in the browser. It has no backend, no accounts and 
 | 1 | DOM / reflected XSS | No HTML string sinks (`innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write`, `eval`, `new Function`, string timers). The UI is built only with `createElement` and Text nodes through `h()`, which only accepts allow-listed attributes (it rejects `on*`, `href`, `src` and `style`). | `src/main.js` §3 |
 | 2 | XSS (browser-enforced) | CSP `require-trusted-types-for 'script'`. Any string passed to an HTML or script sink throws a `TypeError`, even if such a call were added later. Only one Trusted Types policy (`app-sw`) is allowed, and it accepts only the app's own `sw.js` URL. | `index.html`, `src/main.js` §9 |
 | 3 | Input handling | Input is normalized with NFKC and stripped of control and zero-width characters, then filtered against an allow-list (`[A-Z0-9]`). Raw text that is shown back to the user is truncated, limited to printable ASCII, and rendered as text only. The `?c=` and `#bulk` URL inputs go through the same allow-list. | `src/main.js` §1, §10 |
-| 4 | Script and resource injection | Strict CSP with `default-src 'none'` and `script-src` / `style-src` / `font-src` / `img-src` set to `'self'`. There is no `unsafe-inline` or `unsafe-eval`, and `base-uri`, `form-action` and `object-src` are set to `'none'`. | `index.html` |
+| 4 | Script and resource injection | Strict CSP with `default-src 'none'` and `script-src` / `style-src` / `font-src` / `img-src` set to `'self'`. There is no `unsafe-inline` or `unsafe-eval`, and `base-uri`, `form-action` and `object-src` are set to `'none'`. Sent as an HTTP header in production, and kept as a `<meta>` tag for defence in depth. | `public/_headers`, `index.html`, `legal.html` |
 | 5 | Third-party / supply chain | The page loads zero third-party resources. Tailwind is compiled at build time and fonts are self-hosted with `@fontsource`. Every `<script>` and stylesheet gets `integrity="sha384-…"` and `crossorigin="anonymous"` at build time, and the build fails if an external URL appears in `index.html`. | `vite.config.js` (`subresourceIntegrity`) |
-| 6 | Clickjacking | OWASP frame-busting. The UI is hidden by default with CSS and revealed only when `window.self === window.top`. A framed copy tries to break out, and stays blank if that fails. | `public/security-init.js`, `src/styles.css` |
+| 6 | Clickjacking | HTTP headers `Content-Security-Policy: frame-ancestors 'none'` and `X-Frame-Options: DENY`. As a fallback, OWASP frame-busting hides the UI unless `window.self === window.top`. | `public/_headers`, `public/security-init.js`, `src/styles.css` |
 | 7 | Sensitive data exposure | Stateless processing. Nothing is stored in `localStorage`, `sessionStorage`, cookies or IndexedDB, and the theme is kept in memory. A `no-referrer` policy keeps the page URL from leaking. External links use `rel="noopener noreferrer"`. | all |
 | 8 | CSV / formula injection | On export, cells that start with `=`, `+`, `-`, `@`, TAB or CR get a `'` prefix, and every cell is quoted per RFC 4180. | `src/main.js` (`csvCell`) |
 | 9 | Client-side DoS | Bulk input is capped at 50,000 characters and 2,000 entries per run. Single input is capped at 11 characters. | `src/main.js` §0 |
 | 10 | Code hygiene | ES module scope with no globals, frozen lookup tables, prototype-less maps, no source maps in production, and no runtime dependencies. | `src/main.js`, `vite.config.js` |
-| 11 | Vulnerable dependencies (A06) | No runtime dependencies (`npm audit --omit=dev` → 0). Deployment runs through GitHub Actions, not the `gh-pages` package, whose dependency chain contains `braces` (GHSA-vfj7-8cjw-p6xm, no patched release). CI installs with `npm ci --ignore-scripts`, fails on any high or critical advisory (`npm audit --audit-level=high`), and runs with a least-privilege token. | `.github/workflows/deploy.yml` |
+| 11 | Vulnerable dependencies (A06) | No runtime dependencies (`npm audit --omit=dev` → 0). Cloudflare Pages deploys through its Git integration, so no deploy token is stored in GitHub. GitHub Actions CI installs with `npm ci --ignore-scripts`, fails on any high or critical advisory (`npm audit --audit-level=high`), and runs with a read-only token. | `.github/workflows/ci.yml` |
+| 12 | Transport security | `.app` is on the browsers' HSTS preload list (HTTPS only), and the site also sends `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`. Other headers: `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `Permissions-Policy`, and `Cross-Origin-Opener-Policy` / `Cross-Origin-Resource-Policy: same-origin`. | `public/_headers` |
+| 13 | Domain abuse / email spoofing | The domain sends and receives no email. It publishes a null MX, `v=spf1 -all`, DMARC `p=reject` and an empty DKIM wildcard. DNSSEC and CAA restrict who can issue certificates. | Cloudflare DNS (see the README, *Deployment*) |
 
-## Limits of static hosting (GitHub Pages)
+## Accepted risks
 
-GitHub Pages cannot send custom HTTP headers, and browsers ignore these directives when they come from a `<meta>` tag:
+Reviewed: 2026-11-10 · Owner: José Oldemar Chaves Urbina · Next review: when a patched release is published, or by 2027-02-10 at the latest.
 
-- `frame-ancestors`
-- `X-Frame-Options`
-- CSP reporting (`report-uri` / `report-to`)
+| Advisory | Package | Severity | Where it is used | Decision |
+|---|---|---|---|---|
+| [GHSA-gcqx-w48m-w2h4](https://github.com/advisories/GHSA-gcqx-w48m-w2h4): prototype poisoning in `mergeObject()` | `deepmerge` 4.3.1, via `vite-plugin-pwa` → `workbox-build` → `@rollup/plugin-node-resolve` | Low | Build time only, while the service worker is generated | **Accepted** |
 
-Control #6 covers clickjacking in the meantime. If the site moves to a host that supports headers (Cloudflare Pages, Netlify, Nginx and similar), send the following. Cloudflare Pages and Netlify read them from a `_headers` file.
+**Why accepted:**
 
-```
-/*
-  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests; require-trusted-types-for 'script'; trusted-types app-sw
-  X-Frame-Options: DENY
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: no-referrer
-  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
-  Cross-Origin-Opener-Policy: same-origin
-  Cross-Origin-Resource-Policy: same-origin
-  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
-```
+- **No fix exists.** 4.3.1 is the latest published version and is affected. `npm audit fix --force` would downgrade `vite-plugin-pwa` to 0.2.1, which breaks the build.
+- **Nothing reaches it from outside.** `deepmerge` only merges this repository's own build configuration. User input never reaches it, and it is not shipped to the browser (`npm audit --omit=dev` → 0).
+- **The deploy gate is unaffected.** It fails only on high or critical advisories (`npm audit --audit-level=high`).
+- **The only other way to remove it** is to drop the PWA (offline support and install), which changes behaviour for users. Not worth it for a low-severity, build-time issue.
+
+**Related mitigation:** `package.json` overrides `glob` inside `workbox-build` (`^14.0.2`). This fixes the moderate advisories for `glob` (GHSA-3g3m-2fjr-6pw4) and `minimatch` (GHSA-g3hv-75wg-m249). The newer `glob` requires Node.js ≥ 20.
+
+**Re-evaluate** when `deepmerge`, `@rollup/plugin-node-resolve` or `workbox-build` publish a fix. Then remove this entry and run `npm audit` again.
+
+## Hosting and HTTP headers
+
+Production runs on **Cloudflare Pages** at `https://containercheck.app`. The response headers are defined in [`public/_headers`](public/_headers), which Vite copies into `dist/`. That file:
+
+- sends the CSP as an HTTP header, adding `frame-ancestors 'none'` (browsers ignore it in `<meta>`);
+- sets `X-Frame-Options`, HSTS, `nosniff`, `Referrer-Policy`, `Permissions-Policy` and COOP/CORP;
+- marks every `*.pages.dev` copy as `X-Robots-Tag: noindex`.
+
+Keep the `<meta>` CSP in `index.html` / `legal.html` and the header CSP identical, apart from `frame-ancestors`.
+
+CSP reporting (`report-to`) is not configured, because the site has no endpoint to receive reports.
 
 ## Development note
 
@@ -46,4 +57,4 @@ The Vite dev server (`npm run dev`) injects inline styles for hot reload, so the
 
 ## Reporting a vulnerability
 
-Please open a private security advisory on GitHub, or contact the author through the LinkedIn link in the footer.
+Please open a private security advisory on GitHub, or write to jose.chaves@irazu.fi.
