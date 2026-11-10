@@ -1,7 +1,7 @@
 {
   "name": "sea-container-check-digit",
   "version": "1.0.0",
-  "homepage": "https://OldemarCRC.github.io/Sea-container-Check-Digit",
+  "homepage": "https://irazu-fi.github.io/ISO-6346-Container-Validator",
   "private": true,
   "type": "module",
   "scripts": {

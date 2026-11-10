@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://oldemarcrc.github.io/Sea-container-Check-Digit/" rel="noopener noreferrer">
+  <a href="https://irazu-fi.github.io/ISO-6346-Container-Validator/" rel="noopener noreferrer">
     <img src="public/android-chrome-192x192.png" alt="ContainerCheck logo" width="96">
   </a>
 </p>
@@ -10,7 +10,7 @@
 
 A fast, security-hardened web tool that calculates and verifies shipping container check digits. Check one number with live feedback, or a whole list at once.
 
-🔗 **[Live demo](https://oldemarcrc.github.io/Sea-container-Check-Digit/)**
+🔗 **[Live demo](https://irazu-fi.github.io/ISO-6346-Container-Validator/)**
 
 <img src="https://img.shields.io/badge/ISO-6346-0284c7" alt="ISO 6346">
 <img src="https://img.shields.io/badge/JavaScript-ES2022-f7df1e?logo=javascript&logoColor=black" alt="Vanilla JavaScript">
@@ -125,10 +125,10 @@ The full control matrix and hosting notes are in **[SECURITY.md](SECURITY.md)**.
 **Prerequisites:** Node.js ≥ 18 and npm ≥ 9.
 
 ```bash
-git clone https://github.com/OldemarCRC/Sea-container-Check-Digit.git
-cd Sea-container-Check-Digit
+git clone https://github.com/irazu-fi/ISO-6346-Container-Validator.git
+cd ISO-6346-Container-Validator
 npm install
-npm run dev        # http://localhost:5173/Sea-container-Check-Digit/
+npm run dev        # http://localhost:5173/ISO-6346-Container-Validator/
 ```
 
 | Script | Description |
@@ -150,6 +150,22 @@ Deployment is automatic. Every push to `main` runs [`.github/workflows/deploy.ym
 
 To redeploy without changes, go to **Actions → Deploy to GitHub Pages → Run workflow**.
 One-time setup: **Settings → Pages → Source → GitHub Actions**.
+
+---
+
+## 📡 Monitoring
+
+ContainerCheck is a static site with no server or database, so there is no `/health` endpoint. If the page is served, the app is available. External monitors (Olivia) check the published page directly:
+
+| Check | Request | Expect |
+|---|---|---|
+| Page up | `GET` or `HEAD https://irazu-fi.github.io/ISO-6346-Container-Validator/` (with the trailing slash; without it GitHub answers `301`) | `200`, body contains `Container Check Digit Validator` |
+| Build points at the right path | `GET` on the same URL | body contains `/ISO-6346-Container-Validator/security-init.js` |
+| TLS certificate | `irazu-fi.github.io:443` | valid; managed and renewed by GitHub |
+
+- **No credentials:** the checks need no cookies, authentication or tokens, and the page sets no cookies and stores no data.
+- **Text check works without JavaScript:** both expected texts are in the static HTML, so a plain HTTP check can see them.
+- **What the second check catches:** it fails when the Vite `base` in `vite.config.js` does not match the repository path. In that case the HTML still loads with `200`, but its CSS and JS return `404` and the app does not work.
 
 ---
 

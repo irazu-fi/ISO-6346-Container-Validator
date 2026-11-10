@@ -10,7 +10,7 @@ ContainerCheck verifies shipping container numbers against the **ISO 6346** stan
 
 The app runs entirely in your browser. Nothing you type is sent to a server or saved.
 
-Open it at **https://oldemarcrc.github.io/Sea-container-Check-Digit/**
+Open it at **https://irazu-fi.github.io/ISO-6346-Container-Validator/**
 
 ---
 
@@ -88,8 +88,8 @@ Use it to check many numbers at once.
 
 - **Dark mode**: the app follows your system theme. Use the moon or sun button in the top-right to switch it for the current visit.
 - **Shareable links**:
-  - `https://oldemarcrc.github.io/Sea-container-Check-Digit/?c=CSQU3054383` opens Single mode with that number filled in.
-  - `https://oldemarcrc.github.io/Sea-container-Check-Digit/#bulk` opens Bulk mode directly.
+  - `https://irazu-fi.github.io/ISO-6346-Container-Validator/?c=CSQU3054383` opens Single mode with that number filled in.
+  - `https://irazu-fi.github.io/ISO-6346-Container-Validator/#bulk` opens Bulk mode directly.
 - **Install as an app**: in Chrome or Edge, use **Install app** in the address bar. On a phone, use **Add to Home Screen**. Once installed, it also works offline.
 
 ---
@@ -117,7 +117,7 @@ Use it to check many numbers at once.
 
 ## Support
 
-For support or questions, contact **oldemar.chaves@gmail.com** or open an issue at https://github.com/OldemarCRC/Sea-container-Check-Digit/issues.
+For support or questions, contact **oldemar.chaves@gmail.com** or open an issue at https://github.com/irazu-fi/ISO-6346-Container-Validator/issues.
 
 ## License
 

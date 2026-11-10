@@ -5,7 +5,7 @@ import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-const BASE = '/Sea-container-Check-Digit/'
+const BASE = '/ISO-6346-Container-Validator/'
 
 /**
  * SECURITY · Subresource Integrity (SRI).
