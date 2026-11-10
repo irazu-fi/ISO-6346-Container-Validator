@@ -20,6 +20,9 @@
   },
   "overrides": {
     "serialize-javascript": "^7.0.1",
-    "postcss": "^8.4.47"
+    "postcss": "^8.4.47",
+    "workbox-build": {
+      "glob": "^14.0.2"
+    }
   }
 }

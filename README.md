@@ -122,7 +122,7 @@ The full control matrix and hosting notes are in **[SECURITY.md](SECURITY.md)**.
 
 ## 🚀 Getting started
 
-**Prerequisites:** Node.js ≥ 18 and npm ≥ 9.
+**Prerequisites:** Node.js ≥ 20 and npm ≥ 9.
 
 ```bash
 git clone https://github.com/irazu-fi/ISO-6346-Container-Validator.git
