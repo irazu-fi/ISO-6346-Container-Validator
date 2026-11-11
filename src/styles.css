@@ -56,3 +56,52 @@ html:not(.unframed) body > :not(noscript) { display: none !important; }
 @keyframes pop { 0% { transform: scale(.85); opacity: .4 } 60% { transform: scale(1.08) } 100% { transform: scale(1); opacity: 1 } }
 .pop { animation: pop .28s ease-out; }
 @media (prefers-reduced-motion: reduce) { .pop { animation: none; } * { transition: none !important; } }
+
+/*
+ * Print (Ctrl+P / "Save as PDF"): black text on white, no reliance on
+ * background colours, controls hidden, the results table printed in full.
+ * Status is always also written as text ("Valid", "Invalid"…), so colour is
+ * never the only carrier of meaning (WCAG 1.4.1).
+ */
+@media print {
+  @page { margin: 15mm; }
+
+  *, *::before, *::after {
+    color: #000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+  html, body { background: #fff !important; font-size: 11pt; }
+
+  /* Interactive controls and decorative chrome */
+  header nav, [role="tablist"], #themeToggle, #copySingle, #clearSingle, #exampleBtn,
+  #bulkInput, #runBulk, #sampleBulk, #clearBulk, #bulkFilters, #copyCsv, #downloadCsv,
+  #copyCorrected, #bulkBody button, #toast, kbd, .ml-auto, footer a[aria-label],
+  [role="tabpanel"] label[for="bulkInput"], #bulkCount, [data-action="apply-fix"] { display: none !important; }
+
+  /* Layout: undo the overlapping card and keep sections whole */
+  main { margin-top: 0 !important; padding-bottom: 0 !important; }
+  header > div { padding-bottom: 8mm !important; }
+  section, .rounded-xl, .rounded-2xl { border-color: #777 !important; }
+  .rounded-xl, tr, details, #plate, section[aria-labelledby="how-title"] { break-inside: avoid; }
+  h1, h2 { break-after: avoid; }
+
+  /* Single mode: the input and the plate keep visible outlines */
+  #singleInput { border: 1pt solid #000 !important; }
+  #plate { justify-content: flex-start !important; font-size: 22pt !important; }
+  #plate span { border-color: #000 !important; }
+
+  /* Bulk results: full table, no horizontal scrolling, headers repeat */
+  .overflow-x-auto { overflow: visible !important; }
+  table { min-width: 0 !important; width: 100% !important; font-size: 9pt; border-collapse: collapse; }
+  thead { display: table-header-group; }
+  th, td { padding: 4pt 6pt !important; border-bottom: 0.5pt solid #999 !important; }
+  .line-through { text-decoration: line-through !important; }
+  #bulkBody td span { white-space: nowrap; }
+
+  /* Show where external links go (legal page and footer) */
+  main a[href^="http"]::after, main a[href^="mailto:"]::after { content: " (" attr(href) ")"; font-size: 8pt; word-break: break-all; }
+}

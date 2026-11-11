@@ -1,0 +1,16 @@
+// Cloudflare Worker (static assets only) for https://containercheck.app
+// The build (`npm audit --audit-level=high && npm run build`) writes to ./dist;
+// `npx wrangler deploy` uploads that folder. HTTP headers come from dist/_headers.
+{
+  "name": "iso-6346-container-validator",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist",
+    // /legal.html → /legal, /index.html → / (clean URLs; the service worker precaches these)
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none"
+  },
+  // Only the custom domain serves the site; no *.workers.dev copies.
+  "workers_dev": false,
+  "preview_urls": false
+}

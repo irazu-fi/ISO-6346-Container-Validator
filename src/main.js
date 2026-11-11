@@ -100,7 +100,12 @@ function analyze(raw) {
 
   if (!/^[A-Z]*$/.test(owner)) errors.owner = 'Owner code must be 3 letters (A–Z).';
   if (category && !/^[A-Z]$/.test(category)) errors.category = 'Category must be a letter: U, J or Z.';
-  else if (category && !CATEGORIES[category]) errors.category = `"${category}" is not a valid category. Use U, J or Z.`;
+  else if (category && !CATEGORIES[category]) {
+    // ISO 6346 / BIC define only U, J and Z. "R" belongs to the size/type code (e.g. 22R1 = reefer).
+    errors.category = category === 'R'
+      ? '"R" is part of the size/type code (reefer, e.g. 22R1), not a category. Use U, J or Z.'
+      : `"${category}" is not a valid category. Use U, J or Z.`;
+  }
   if (!/^\d*$/.test(serial)) errors.serial = 'Serial number must contain 6 digits.';
   if (check && !/^\d$/.test(check)) errors.check = 'Check digit must be a number (0–9).';
   if (/[^A-Z0-9]/.test(code)) errors.general = 'Contains characters that are not letters or digits.';
@@ -194,10 +199,12 @@ let toastTimer;
 function toast(message) {
   const el = $('toast');
   el.textContent = message;          // [XSS-1] text only
-  el.hidden = false;
   requestAnimationFrame(() => el.classList.remove('opacity-0', 'translate-y-4'));
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.add('opacity-0', 'translate-y-4'), 2000); // function, never a string
+  toastTimer = setTimeout(() => {    // function, never a string
+    el.classList.add('opacity-0', 'translate-y-4');
+    toastTimer = setTimeout(() => { el.textContent = ''; }, 300);
+  }, 2000);
 }
 
 /** Clipboard: async API first; the fallback uses a detached textarea's .value (no HTML). */
@@ -219,6 +226,7 @@ async function copyText(text, message = 'Copied to clipboard') {
 /* =========================================================================
  * 5. THEME — in memory only  [MEM]
  * ======================================================================= */
+$('themeToggle').setAttribute('aria-pressed', String(document.documentElement.classList.contains('dark')));
 $('themeToggle').addEventListener('click', () => {
   const dark = document.documentElement.classList.toggle('dark');
   $('themeToggle').setAttribute('aria-pressed', String(dark));
@@ -232,7 +240,11 @@ const TAB_ON = ['border-sky-600', 'text-sky-700', 'dark:border-cyan-400', 'dark:
 const TAB_OFF = ['border-transparent', 'text-slate-500', 'hover:text-slate-800', 'dark:text-slate-400', 'dark:hover:text-slate-200'];
 const TAB_NAMES = new Set(['single', 'bulk']);
 
-function selectTab(name, focus = false) {
+/**
+ * focusTab = true for arrow/Home/End navigation: focus stays in the tab list
+ * (WAI-ARIA tabs pattern). Otherwise (click, initial load) the panel's field is focused.
+ */
+function selectTab(name, focusTab = false) {
   if (!TAB_NAMES.has(name)) name = 'single'; // allow-list, hash is untrusted
   for (const tab of tabs) {
     const active = tab.dataset.tab === name;
@@ -241,17 +253,20 @@ function selectTab(name, focus = false) {
     tab.classList.remove(...TAB_ON, ...TAB_OFF);
     tab.classList.add(...(active ? TAB_ON : TAB_OFF));
     $(tab.getAttribute('aria-controls')).classList.toggle('hidden', !active);
-    if (active && focus) tab.focus();
+    if (active && focusTab) tab.focus();
   }
   history.replaceState(null, '', name === 'bulk' ? '#bulk' : location.pathname + location.search);
-  (name === 'bulk' ? $('bulkInput') : $('singleInput')).focus({ preventScroll: true });
+  if (!focusTab) (name === 'bulk' ? $('bulkInput') : $('singleInput')).focus({ preventScroll: true });
 }
 
 tabs.forEach((tab, i) => {
   tab.addEventListener('click', () => selectTab(tab.dataset.tab));
   tab.addEventListener('keydown', (e) => {
-    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-    const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
+    if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(e.key)) return;
+    e.preventDefault();
+    const next = e.key === 'Home' ? tabs[0]
+      : e.key === 'End' ? tabs[tabs.length - 1]
+        : tabs[(i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
     selectTab(next.dataset.tab, true);
   });
 });
@@ -282,6 +297,11 @@ const banner = (tone, iconName, title, ...body) =>
       h('p', { class: 'font-semibold' }, title),
       body.length ? h('div', { class: 'mt-0.5 text-sm opacity-90' }, ...body) : null));
 
+/** ISO 6346: remainder 10 gives check digit 0, but the standard recommends not issuing such serial numbers. */
+const remainderNote = (r) => (r.calc?.remainder === 10
+  ? h('span', { class: 'mt-1 block' }, 'Note: the remainder is 10, so the check digit is 0. ISO 6346 recommends not using serial numbers that give this result.')
+  : null);
+
 function renderStatus(r) {
   const len = r.code.length;
   switch (r.status) {
@@ -297,9 +317,9 @@ function renderStatus(r) {
       return banner('warning', 'warn', 'Format error',
         Object.values(r.errors).flatMap((msg, i) => (i ? [h('br'), msg] : [msg])));
     case 'computed':
-      return banner('info', 'info', `Check digit is ${r.expected}`, 'Full container number: ', mono(pretty(r.corrected)));
+      return banner('info', 'info', `Check digit is ${r.expected}`, 'Full container number: ', mono(pretty(r.corrected)), remainderNote(r));
     case 'valid':
-      return banner('success', 'check', 'Valid container number', 'Check digit ', mono(r.check), ' matches the ISO 6346 calculation.');
+      return banner('success', 'check', 'Valid container number', 'Check digit ', mono(r.check), ' matches the ISO 6346 calculation.', remainderNote(r));
     case 'invalid':
       return banner('danger', 'x', 'Invalid check digit',
         'Entered ', mono(r.check), ', expected ', mono(String(r.expected)), '. Correct number: ', mono(pretty(r.corrected)), ' ',
@@ -344,9 +364,9 @@ function card({ label, hint, value, size, state, note }) {
   return h('div', { class: `rounded-xl border p-4 transition ${CARD_TONE[state]}` },
     h('div', { class: 'flex items-center justify-between gap-2' },
       h('p', { class: 'text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400' }, label),
-      h('span', { class: 'hidden font-mono text-[10px] text-slate-400 xl:inline' }, hint)),
+      h('span', { class: 'hidden font-mono text-[10px] text-slate-600 dark:text-slate-400 xl:inline' }, hint)),
     h('p', { class: 'mt-2 font-mono text-2xl font-extrabold tracking-[0.15em] text-slate-900 dark:text-white' },
-      value, h('span', { class: 'text-slate-300 dark:text-slate-600' }, placeholder)),
+      value, h('span', { class: 'text-slate-500 dark:text-slate-400', 'aria-hidden': 'true' }, placeholder)),
     h('p', { class: 'mt-1 min-h-[1rem] text-xs text-slate-500 dark:text-slate-400' }, note || ' '));
 }
 
@@ -361,7 +381,7 @@ function renderBreakdown(r) {
   if (r.errors.check) { checkState = 'error'; checkNote = 'Must be a digit'; }
 
   return [
-    card({ label: 'Owner code (BIC)', hint: '3 letters', value: r.owner, size: 3, state: segState(r.owner, 3, r.errors.owner), note: r.errors.owner ? 'Letters only' : 'Registered with BIC' }),
+    card({ label: 'Owner code (BIC)', hint: '3 letters', value: r.owner, size: 3, state: segState(r.owner, 3, r.errors.owner), note: r.errors.owner ? 'Letters only' : 'Not checked against the BIC register' }),
     card({ label: 'Category', hint: 'U · J · Z', value: r.category, size: 1, state: segState(r.category, 1, r.errors.category), note: r.errors.category ? 'Use U, J or Z' : (CATEGORIES[r.category] || 'Equipment type') }),
     card({ label: 'Serial number', hint: '6 digits', value: r.serial, size: 6, state: segState(r.serial, 6, r.errors.serial), note: r.errors.serial ? 'Digits only' : 'Owner-assigned' }),
     card({ label: 'Check digit', hint: '1 digit', value: checkValue, size: 1, state: checkState, note: checkNote }),
@@ -373,7 +393,7 @@ function renderSteps(calc) {
   const th = (text, cls = 'pb-2 pr-4 font-semibold') => h('th', { class: cls }, text);
   const rows = calc.steps.map((s) =>
     h('tr', { class: 'border-b border-slate-100 last:border-0 dark:border-slate-800' },
-      h('td', { class: 'py-1.5 pr-4 text-slate-400' }, String(s.position)),
+      h('td', { class: 'py-1.5 pr-4 text-slate-600 dark:text-slate-400' }, String(s.position)),
       h('td', { class: 'py-1.5 pr-4 font-bold text-slate-900 dark:text-white' }, s.char),
       h('td', { class: 'py-1.5 pr-4' }, String(s.value)),
       h('td', { class: 'whitespace-nowrap py-1.5 pr-4 text-slate-500' },
@@ -382,13 +402,13 @@ function renderSteps(calc) {
 
   return [
     h('table', { class: 'tabular mt-3 w-full font-mono text-xs sm:text-sm' },
-      h('thead', { class: 'text-left text-[11px] uppercase tracking-wider text-slate-400' },
+      h('thead', { class: 'text-left text-[11px] uppercase tracking-wider text-slate-600 dark:text-slate-400' },
         h('tr', {}, th('Pos'), th('Char'), th('Value'), th('Weight'), th('Product', 'pb-2 text-right font-semibold'))),
       h('tbody', {}, rows)),
     h('div', { class: 'tabular mt-3 grid gap-2 rounded-lg bg-slate-50 p-3 font-mono text-sm dark:bg-slate-800/60 sm:grid-cols-3' },
       h('div', {}, 'Sum = ', h('b', {}, fmt(calc.sum))),
       h('div', {}, `${fmt(calc.sum)} mod 11 = `, h('b', {}, String(calc.remainder))),
-      h('div', {}, 'Check digit = ', h('b', { class: 'text-sky-600 dark:text-cyan-400' }, String(calc.digit)),
+      h('div', {}, 'Check digit = ', h('b', { class: 'text-sky-700 dark:text-cyan-400' }, String(calc.digit)),
         calc.remainder === 10 ? h('span', { class: 'text-xs text-slate-500' }, ' (10 → 0)') : null)),
   ];
 }
@@ -403,6 +423,7 @@ function renderSingle() {
 
   singleInput.classList.remove(...Object.values(INPUT_STATE).flat());
   if (INPUT_STATE[r.status]) singleInput.classList.add(...INPUT_STATE[r.status]);
+  singleInput.setAttribute('aria-invalid', String(r.status === 'error' || r.status === 'invalid'));
 
   $('stepsBox').classList.toggle('hidden', !r.calc);
   $('steps').replaceChildren(...(r.calc ? renderSteps(r.calc) : []));
@@ -497,15 +518,15 @@ function statCard(label, n, color) {
 
 function bulkRow(r) {
   const st = BULK_STATUS[r.status];
-  const dash = () => h('span', { class: 'text-slate-400' }, '—');
+  const dash = () => h('span', { class: 'text-slate-600 dark:text-slate-400' }, '—');
 
   let digitCell = dash();
-  if (r.status === 'valid') digitCell = h('span', { class: 'font-bold text-emerald-600 dark:text-emerald-400' }, r.check);
-  if (r.status === 'invalid') digitCell = [h('span', { class: 'text-red-500 line-through' }, r.check), ' → ', h('span', { class: 'font-bold text-emerald-600 dark:text-emerald-400' }, String(r.expected))];
-  if (r.status === 'computed') digitCell = ['+ ', h('span', { class: 'font-bold text-cyan-600 dark:text-cyan-400' }, String(r.expected))];
+  if (r.status === 'valid') digitCell = h('span', { class: 'font-bold text-emerald-700 dark:text-emerald-400' }, r.check);
+  if (r.status === 'invalid') digitCell = [h('span', { class: 'text-red-700 line-through dark:text-red-400' }, r.check), ' → ', h('span', { class: 'font-bold text-emerald-700 dark:text-emerald-400' }, String(r.expected))];
+  if (r.status === 'computed') digitCell = ['+ ', h('span', { class: 'font-bold text-cyan-700 dark:text-cyan-400' }, String(r.expected))];
 
   return h('tr', { class: 'hover:bg-slate-50/70 dark:hover:bg-slate-800/40' },
-    h('td', { class: 'tabular px-4 py-3 text-slate-400' }, String(r.index)),
+    h('td', { class: 'tabular px-4 py-3 text-slate-600 dark:text-slate-400' }, String(r.index)),
     // Raw input is echoed ONLY as a Text node (bounded + printable) → payloads like <img onerror> render inert.
     h('td', { class: 'break-all px-4 py-3 font-mono font-semibold text-slate-900 dark:text-white' },
       r.display,
@@ -519,7 +540,7 @@ function bulkRow(r) {
       // data-copy only ever holds a validated [A-Z]{4}[0-9]{7} value.
       r.corrected ? h('button', {
         type: 'button', 'data-copy': r.corrected, title: 'Copy', 'aria-label': `Copy ${r.corrected}`,
-        class: 'rounded-md p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-sky-600 dark:hover:bg-slate-800 dark:hover:text-cyan-400',
+        class: 'rounded-md p-1.5 text-slate-600 transition hover:bg-slate-100 hover:text-sky-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-cyan-400',
       }, icon('copy', 'h-4 w-4', 2)) : null));
 }
 
@@ -527,22 +548,22 @@ function renderBulk() {
   const count = (s) => bulkRows.filter((r) => r.status === s).length;
   $('bulkStats').replaceChildren(
     statCard('Total', bulkRows.length, 'text-slate-900 dark:text-white'),
-    statCard('Valid', count('valid'), 'text-emerald-600 dark:text-emerald-400'),
+    statCard('Valid', count('valid'), 'text-emerald-700 dark:text-emerald-400'),
     statCard('Invalid', count('invalid'), 'text-red-600 dark:text-red-400'),
-    statCard('Missing digit', count('computed'), 'text-cyan-600 dark:text-cyan-400'),
-    statCard('Malformed', count('malformed'), 'text-amber-600 dark:text-amber-400'));
+    statCard('Missing digit', count('computed'), 'text-cyan-700 dark:text-cyan-400'),
+    statCard('Malformed', count('malformed'), 'text-amber-700 dark:text-amber-400'));
 
   $('bulkFilters').replaceChildren(...FILTERS.map(([key, label]) => h('button', {
     type: 'button', 'data-filter': key, 'aria-pressed': String(bulkFilter === key),
     class: `rounded-md px-3 py-1.5 text-xs font-semibold transition ${bulkFilter === key
       ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white'
-      : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`,
+      : 'text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100'}`,
   }, label)));
 
   const visible = bulkRows.filter((r) => bulkFilter === 'all' || r.status === bulkFilter);
   $('bulkBody').replaceChildren(...(visible.length
     ? visible.map(bulkRow)
-    : [h('tr', {}, h('td', { colspan: 6, class: 'px-4 py-8 text-center text-sm text-slate-400' }, 'No entries in this category.'))]));
+    : [h('tr', {}, h('td', { colspan: 6, class: 'px-4 py-8 text-center text-sm text-slate-600 dark:text-slate-400' }, 'No entries in this category.'))]));
 }
 
 /**
