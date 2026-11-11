@@ -78,7 +78,7 @@ export default defineConfig({
       // SECURITY: no auto-injected inline/registration script; main.js registers
       // the worker itself through a Trusted Types policy.
       injectRegister: false,
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Sea Container Check Digit Verifier',
         short_name: 'ContainerCheck',
@@ -90,8 +90,11 @@ export default defineConfig({
         scope: '/',
         display: 'standalone',
         icons: [
-          { src: 'android-chrome-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-          { src: 'android-chrome-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+          { src: 'android-chrome-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'android-chrome-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          // Full-bleed version with the logo inside the 80 % safe zone, for adaptive icons.
+          { src: 'maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
         ],
       },
       workbox: {

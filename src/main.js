@@ -227,6 +227,16 @@ async function copyText(text, message = 'Copied to clipboard') {
  * 5. THEME — in memory only  [MEM]
  * ======================================================================= */
 $('themeToggle').setAttribute('aria-pressed', String(document.documentElement.classList.contains('dark')));
+
+/*
+ * Brand link: on the app page itself, do not reload. A reload would reset the
+ * theme to the OS preference, because the theme is deliberately not stored [MEM].
+ */
+$('brandLink').addEventListener('click', (e) => {
+  if (location.pathname !== '/') return; // from other pages, navigate normally
+  e.preventDefault();
+  window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+});
 $('themeToggle').addEventListener('click', () => {
   const dark = document.documentElement.classList.toggle('dark');
   $('themeToggle').setAttribute('aria-pressed', String(dark));
