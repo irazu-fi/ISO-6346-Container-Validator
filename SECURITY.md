@@ -16,9 +16,9 @@ ContainerCheck runs entirely in the browser. It has no backend, no accounts and 
 | 8 | CSV / formula injection | On export, cells that start with `=`, `+`, `-`, `@`, TAB or CR get a `'` prefix, and every cell is quoted per RFC 4180. | `src/main.js` (`csvCell`) |
 | 9 | Client-side DoS | Bulk input is capped at 50,000 characters and 2,000 entries per run. Single input is capped at 11 characters. | `src/main.js` §0 |
 | 10 | Code hygiene | ES module scope with no globals, frozen lookup tables, prototype-less maps, no source maps in production, and no runtime dependencies. | `src/main.js`, `vite.config.js` |
-| 11 | Vulnerable dependencies (A06) | No runtime dependencies (`npm audit --omit=dev` → 0). Cloudflare Pages deploys through its Git integration, so no deploy token is stored in GitHub. GitHub Actions CI installs with `npm ci --ignore-scripts`, fails on any high or critical advisory (`npm audit --audit-level=high`), and runs with a read-only token. | `.github/workflows/ci.yml` |
+| 11 | Vulnerable dependencies (A06) | No runtime dependencies (`npm audit --omit=dev` → 0). Cloudflare builds and deploys from Git (Workers Builds), so no deploy token is stored in GitHub. GitHub Actions CI installs with `npm ci --ignore-scripts`, fails on any high or critical advisory (`npm audit --audit-level=high`), and runs with a read-only token. | `.github/workflows/ci.yml` |
 | 12 | Transport security | `.app` is on the browsers' HSTS preload list (HTTPS only), and the site also sends `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`. Other headers: `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `Permissions-Policy`, and `Cross-Origin-Opener-Policy` / `Cross-Origin-Resource-Policy: same-origin`. | `public/_headers` |
-| 13 | Domain abuse / email spoofing | The domain sends and receives no email. It publishes a null MX, `v=spf1 -all`, DMARC `p=reject` and an empty DKIM wildcard. DNSSEC and CAA restrict who can issue certificates. | Cloudflare DNS (see the README, *Deployment*) |
+| 13 | Domain abuse / email spoofing | The domain sends and receives no email. It publishes a null MX, `v=spf1 -all`, DMARC `p=reject` (strict alignment) and an empty DKIM wildcard. CAA allows only Let's Encrypt and Cloudflare's backup CAs, with `iodef` reporting. DNSSEC is active. All verified on 2026-11-11 with `nslookup` and DNS-over-HTTPS. | Cloudflare DNS (see README, *Deployment*) |
 
 ## Accepted risks
 
@@ -41,15 +41,17 @@ Reviewed: 2026-11-10 · Owner: José Oldemar Chaves Urbina · Next review: when 
 
 ## Hosting and HTTP headers
 
-Production runs on **Cloudflare Pages** at `https://containercheck.app`. The response headers are defined in [`public/_headers`](public/_headers), which Vite copies into `dist/`. That file:
+Production runs on a **Cloudflare Worker with static assets** at `https://containercheck.app`. The response headers are defined in [`public/_headers`](public/_headers), which Vite copies into `dist/`. That file:
 
 - sends the CSP as an HTTP header, adding `frame-ancestors 'none'` (browsers ignore it in `<meta>`);
 - sets `X-Frame-Options`, HSTS, `nosniff`, `Referrer-Policy`, `Permissions-Policy` and COOP/CORP;
-- marks every `*.pages.dev` copy as `X-Robots-Tag: noindex`.
+- gives the service worker scripts their own CSP, without Trusted Types, so offline support keeps working.
+
+`*.workers.dev` and preview URLs are disabled in `wrangler.jsonc`, so no copy of the site exists outside the custom domain. `www.containercheck.app` answers only with a `301` to the apex. TLS: minimum version 1.2, TLS 1.3 on, and *Always Use HTTPS*.
 
 Keep the `<meta>` CSP in `index.html` / `legal.html` and the header CSP identical, apart from `frame-ancestors`.
 
-CSP reporting (`report-to`) is not configured, because the site has no endpoint to receive reports.
+CSP reporting (`report-to`) is not configured, because the site has no endpoint to receive reports. Cloudflare adds its own Network Error Logging headers (`NEL` / `Report-To`, failures only).
 
 ## Development note
 

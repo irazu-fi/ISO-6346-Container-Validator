@@ -1,4 +1,4 @@
-# Cloudflare Pages response headers (https://developers.cloudflare.com/pages/configuration/headers/)
+# Response headers for the Cloudflare Worker's static assets (same _headers format as Cloudflare Pages).
 # SECURITY: these are real HTTP headers, so frame-ancestors / X-Frame-Options / HSTS work here,
 # unlike the <meta> CSP in the HTML (kept as defence in depth). Keep both CSPs identical
 # except for frame-ancestors, which only works as a header.
@@ -29,8 +29,3 @@
 /workbox-*.js
   ! Content-Security-Policy
   Content-Security-Policy: default-src 'none'; script-src 'self'; connect-src 'self'
-
-# SEO: keep the *.pages.dev copies (production and previews) out of search results;
-# only https://containercheck.app is indexed.
-https://:project.pages.dev/*
-  X-Robots-Tag: noindex

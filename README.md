@@ -52,7 +52,7 @@ A fast, security-hardened web tool that calculates and verifies shipping contain
 - **Copy as CSV**, **Download CSV**, **Copy corrected**, plus a copy button on every row.
 
 **General**
-- Light and dark theme (follows your OS, with a manual toggle).
+- Light and dark theme: follows your OS, with a manual toggle that carries over to the legal page (nothing is stored).
 - Responsive and accessible (keyboard-navigable tabs, `aria-live` results) and installable as a PWA.
 - Deep links: `?c=CSQU3054383` pre-fills Single mode and `#bulk` opens Bulk mode.
 - **Private by design**: no backend, no tracking, nothing stored. Everything runs in your browser.
@@ -100,7 +100,7 @@ The full control matrix and hosting notes are in **[SECURITY.md](SECURITY.md)**.
 | UI | HTML5 + vanilla JavaScript (ES modules, no framework) |
 | Styling | Tailwind CSS 4 (compiled), Inter + JetBrains Mono (self-hosted) |
 | Build | Vite 6 · vite-plugin-pwa · custom SRI plugin |
-| Hosting | Cloudflare Pages (Git integration) at containercheck.app · CI on GitHub Actions |
+| Hosting | Cloudflare Workers (static assets) at containercheck.app, built from Git · CI on GitHub Actions |
 
 ### Project structure
 ```
@@ -110,11 +110,12 @@ The full control matrix and hosting notes are in **[SECURITY.md](SECURITY.md)**.
 │   ├── main.js              # ISO 6346 logic, safe DOM rendering, single + bulk modes
 │   └── styles.css           # Tailwind entry, fonts, anti-framing rule
 ├── public/
-│   ├── _headers             # Cloudflare Pages HTTP security headers (CSP, HSTS, XFO…)
+│   ├── _headers             # HTTP security headers served by Cloudflare (CSP, HSTS, XFO…)
 │   ├── robots.txt, sitemap.xml, og-image.png
 │   ├── security-init.js     # Anti-clickjacking + initial theme (runs before paint)
-│   └── *.png / favicon.ico  # Icons
+│   └── favicon.svg / *.png / favicon.ico  # Logo and icons
 ├── vite.config.js           # Tailwind, PWA, SRI plugin, dev-only CSP relaxation
+├── wrangler.jsonc           # Cloudflare Worker: serve ./dist, no workers.dev / preview URLs
 ├── .github/workflows/
 │   └── ci.yml               # Audit + build check on every push / PR (no deploy rights)
 ├── SECURITY.md
@@ -145,32 +146,34 @@ npm run dev        # http://localhost:5173/
 
 ## 🌐 Deployment
 
-Production is **https://containercheck.app**, hosted on **Cloudflare Pages** with its Git integration. Every push to `main` is built and published automatically. Pull requests get preview URLs on `*.pages.dev`, which are marked `noindex`.
+Production is **https://containercheck.app**, served by a **Cloudflare Worker with static assets** (`iso-6346-container-validator`) and built from this repository. Every push to `main` is built and deployed automatically. The `*.workers.dev` and preview URLs are disabled in [`wrangler.jsonc`](wrangler.jsonc), so the site exists only on its own domain.
 
-| Cloudflare Pages setting | Value |
+| Cloudflare build setting | Value |
 |---|---|
 | Production branch | `main` |
 | Build command | `npm audit --audit-level=high && npm run build` |
-| Build output directory | `dist` |
+| Deploy command | `npx wrangler deploy` (reads `wrangler.jsonc`, uploads `dist/`) |
 | Node.js | from `.node-version` (22) |
 
 On every push and pull request, [`.github/workflows/ci.yml`](.github/workflows/ci.yml) audits and builds the project. It has no deploy permissions and uses no secrets.
 
-### DNS (Cloudflare)
+### Domain, TLS and DNS (Cloudflare)
 
-The domain has no email, so the records below lock it down against spoofing:
+- **TLS:** Universal certificate from Let's Encrypt for `containercheck.app` and `*.containercheck.app`, renewed automatically. *Always Use HTTPS* is on, the minimum version is TLS 1.2 and TLS 1.3 is enabled. `.app` is on the browsers' HSTS preload list.
+- **`www`:** redirected to the apex with a permanent `301` by a Redirect Rule (`https://www.containercheck.app/*` → `https://containercheck.app/${1}`, query string preserved).
+- **DNSSEC:** active.
+
+The domain has no email, so these records lock it down against spoofing:
 
 | Type | Name | Content | Purpose |
 |---|---|---|---|
-| CNAME (proxied) | `@` | created by Pages when the custom domain is added | site |
-| CNAME (proxied) | `www` | `containercheck.app` | redirected to the apex by a Redirect Rule |
+| Worker custom domain | `@` | `iso-6346-container-validator` | site |
+| A (proxied) | `www` | `192.0.2.1` (reserved, never reached) | lets the Redirect Rule answer |
 | MX | `@` | `.` (priority 0) | null MX, RFC 7505 |
 | TXT | `@` | `v=spf1 -all` | no server may send mail |
 | TXT | `_dmarc` | `v=DMARC1; p=reject; sp=reject; adkim=s; aspf=s` | reject spoofed mail |
 | TXT | `*._domainkey` | `v=DKIM1; p=` | no valid DKIM keys |
-| CAA | `@` | `0 issue "letsencrypt.org"`, `0 issue "pki.goog"`, `0 issue "ssl.com"`, `0 iodef "mailto:jose.chaves@irazu.fi"` | only the CAs Cloudflare uses |
-
-DNSSEC is enabled in Cloudflare (DNS → Settings → DNSSEC).
+| CAA | `@` | `0 issue "letsencrypt.org"`, `0 issuewild "letsencrypt.org"`, `0 iodef "mailto:jose.chaves@irazu.fi"` | only Let's Encrypt (Cloudflare adds its backup CAs automatically) |
 
 ---
 
@@ -183,7 +186,7 @@ ContainerCheck is a static site with no server or database, so there is no `/hea
 | App page | `GET` or `HEAD https://containercheck.app/` | `200`, body contains `Container Check Digit Validator` |
 | Legal page | `GET https://containercheck.app/legal` | `200`, body contains `Who is responsible` |
 | www redirect | `HEAD https://www.containercheck.app/` | `301` to `https://containercheck.app/` |
-| TLS certificate | `containercheck.app:443` and `www.containercheck.app:443` | valid; issued and renewed by Cloudflare |
+| TLS certificate | `containercheck.app:443` (the wildcard also covers `www`) | valid; issued by Let's Encrypt, renewed by Cloudflare |
 
 - **No credentials:** the checks need no cookies, authentication or tokens, and the site sets no cookies and stores no data.
 - **Text check works without JavaScript:** the expected texts are in the static HTML, so a plain HTTP check can see them.
