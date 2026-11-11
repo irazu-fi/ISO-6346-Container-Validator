@@ -24,11 +24,38 @@
   }
 
   /*
-   * Initial theme from the OS preference only.
+   * Theme without storage.
    * SECURITY / PRIVACY: nothing is read from or written to localStorage,
-   * sessionStorage or cookies — the app is fully stateless.
+   * sessionStorage or cookies — the app stays stateless.
+   *   1. Default: the OS preference (prefers-color-scheme).
+   *   2. A manual choice is carried between our own pages in the link itself:
+   *      links marked data-keep-theme get ?theme=dark|light when the current
+   *      theme differs from the OS preference. On arrival the value is
+   *      allow-listed, applied, and removed from the address bar, so shared
+   *      links never force a theme.
    */
-  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    root.classList.add('dark');
+  var osDark = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  var dark = osDark;
+  var match = /(?:^|[?&])theme=(dark|light)(?:&|$)/.exec(location.search);
+  if (match) {
+    dark = match[1] === 'dark';
+    try {
+      var url = new URL(location.href);
+      url.searchParams.delete('theme');
+      history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+    } catch (e) { /* keep the URL as is */ }
   }
+  if (dark) root.classList.add('dark');
+
+  // Capture phase: runs before any page handler, and only for same-origin links we mark.
+  document.addEventListener('click', function (event) {
+    var link = event.target && event.target.closest ? event.target.closest('a[data-keep-theme]') : null;
+    if (!link) return;
+    var target = new URL(link.getAttribute('href'), location.href);
+    if (target.origin !== location.origin) return;
+    var current = root.classList.contains('dark');
+    target.searchParams.delete('theme');
+    if (current !== osDark) target.searchParams.set('theme', current ? 'dark' : 'light');
+    link.setAttribute('href', target.pathname + target.search + target.hash);
+  }, true);
 })();

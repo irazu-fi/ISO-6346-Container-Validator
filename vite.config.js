@@ -101,6 +101,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,woff2,png,ico,svg}'],
         // Not an SPA: let each page (index.html, legal.html) be served as itself.
         navigateFallback: null,
+        // Our own URL parameters must not stop the precache from answering offline.
+        ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^theme$/, /^c$/],
         // Cloudflare Pages serves pages at clean URLs and answers /index.html and
         // /legal.html with a 308 redirect. Workbox refuses redirected responses, so
         // precache the final URLs instead, otherwise offline support silently fails.
