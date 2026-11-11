@@ -274,6 +274,93 @@
         <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">The check digit is the sum modulo 11. A remainder of 10 becomes <span class="font-mono">0</span>.</p>
       </div>
     </section>
+    <!-- How to use: native <details>/<summary> accordion (keyboard and screen-reader accessible without JS) -->
+    <section id="help" class="mt-8" aria-labelledby="help-title">
+      <h2 id="help-title" class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">How to use</h2>
+      <div class="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700/80 dark:bg-slate-900">
+        <details class="group border-t border-slate-200 first:border-t-0 dark:border-slate-700/80">
+          <summary class="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg px-5 py-4 text-left font-semibold text-slate-900 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-600 dark:text-white dark:hover:bg-slate-800/60 dark:focus-visible:ring-cyan-400 [&::-webkit-details-marker]:hidden">
+            <span>What does a container number look like?</span>
+            <svg class="h-4 w-4 shrink-0 text-slate-500 transition group-open:rotate-180 dark:text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <div class="space-y-3 px-5 pb-5 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+            <p>An ISO 6346 container number has <strong>11 characters</strong>, for example <span class="font-mono font-semibold text-slate-900 dark:text-white">CSQU 305438 3</span>:</p>
+            <ul class="list-disc space-y-1 pl-5">
+              <li><strong>Owner code (BIC):</strong> 3 letters, e.g. <span class="font-mono font-semibold text-slate-900 dark:text-white">CSQ</span>. It identifies the owner and is registered with the Bureau International des Containers.</li>
+              <li><strong>Category identifier:</strong> 1 letter, <span class="font-mono font-semibold text-slate-900 dark:text-white">U</span>, <span class="font-mono font-semibold text-slate-900 dark:text-white">J</span> or <span class="font-mono font-semibold text-slate-900 dark:text-white">Z</span>.</li>
+              <li><strong>Serial number:</strong> 6 digits, e.g. <span class="font-mono font-semibold text-slate-900 dark:text-white">305438</span>.</li>
+              <li><strong>Check digit:</strong> 1 digit, calculated from the first 10 characters, e.g. <span class="font-mono font-semibold text-slate-900 dark:text-white">3</span>. On containers it is usually painted inside a box.</li>
+            </ul>
+            <p>Spaces, hyphens, dots and slashes are ignored, and lowercase letters are converted automatically, so <span class="font-mono font-semibold text-slate-900 dark:text-white">csqu 305438-3</span> works too.</p>
+          </div>
+        </details>
+        <details class="group border-t border-slate-200 first:border-t-0 dark:border-slate-700/80">
+          <summary class="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg px-5 py-4 text-left font-semibold text-slate-900 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-600 dark:text-white dark:hover:bg-slate-800/60 dark:focus-visible:ring-cyan-400 [&::-webkit-details-marker]:hidden">
+            <span>Single or Bulk: which one should I use?</span>
+            <svg class="h-4 w-4 shrink-0 text-slate-500 transition group-open:rotate-180 dark:text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <div class="space-y-3 px-5 pb-5 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+            <ul class="list-disc space-y-1 pl-5">
+              <li><strong>Single</strong> checks one number while you type. With <strong>10 characters</strong> it calculates the missing check digit; with <strong>11</strong> it verifies it. If the digit is wrong, it shows the correct one and offers <strong>Use corrected</strong>. <strong>Copy result</strong> copies the complete, correct number.</li>
+              <li><strong>Bulk</strong> checks a whole list at once. Paste numbers separated by new lines, commas, semicolons or tabs (a column copied from Excel works), then press <strong>Validate all</strong> or <kbd class="rounded border border-slate-300 px-1 font-mono text-xs dark:border-slate-600">Ctrl</kbd> + <kbd class="rounded border border-slate-300 px-1 font-mono text-xs dark:border-slate-600">Enter</kbd>. Each entry is marked <em>Valid</em>, <em>Invalid</em>, <em>Missing digit</em> or <em>Malformed</em>, and repeated numbers are labelled <em>DUP</em>. Up to 2,000 entries per run.</li>
+            </ul>
+          </div>
+        </details>
+        <details class="group border-t border-slate-200 first:border-t-0 dark:border-slate-700/80">
+          <summary class="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg px-5 py-4 text-left font-semibold text-slate-900 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-600 dark:text-white dark:hover:bg-slate-800/60 dark:focus-visible:ring-cyan-400 [&::-webkit-details-marker]:hidden">
+            <span>How do I export the results?</span>
+            <svg class="h-4 w-4 shrink-0 text-slate-500 transition group-open:rotate-180 dark:text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <div class="space-y-3 px-5 pb-5 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+            <p>In Bulk mode, after validating:</p>
+            <ul class="list-disc space-y-1 pl-5">
+              <li><strong>Copy as CSV</strong> copies the full results table, ready to paste into Excel or Google Sheets.</li>
+              <li><strong>Download CSV</strong> saves the same table as <span class="font-mono font-semibold text-slate-900 dark:text-white">container-check-results.csv</span>.</li>
+              <li><strong>Copy corrected</strong> copies every number that is valid or could be fixed, one per line, with the right check digit.</li>
+            </ul>
+            <p>The CSV has the columns input, normalized, status, entered and expected check digit, correct number and note. Cells that start with <span class="font-mono font-semibold text-slate-900 dark:text-white">=</span>, <span class="font-mono font-semibold text-slate-900 dark:text-white">+</span>, <span class="font-mono font-semibold text-slate-900 dark:text-white">-</span> or <span class="font-mono font-semibold text-slate-900 dark:text-white">@</span> are prefixed with an apostrophe, so spreadsheets treat them as text and never as formulas.</p>
+          </div>
+        </details>
+        <details class="group border-t border-slate-200 first:border-t-0 dark:border-slate-700/80">
+          <summary class="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg px-5 py-4 text-left font-semibold text-slate-900 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-600 dark:text-white dark:hover:bg-slate-800/60 dark:focus-visible:ring-cyan-400 [&::-webkit-details-marker]:hidden">
+            <span>What do the category letters U, J, Z (and R) mean?</span>
+            <svg class="h-4 w-4 shrink-0 text-slate-500 transition group-open:rotate-180 dark:text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <div class="space-y-3 px-5 pb-5 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+            <ul class="list-disc space-y-1 pl-5">
+              <li><span class="font-mono font-semibold text-slate-900 dark:text-white">U</span>: freight container (almost every container you will see).</li>
+              <li><span class="font-mono font-semibold text-slate-900 dark:text-white">J</span>: detachable freight container-related equipment, such as clip-on generator sets.</li>
+              <li><span class="font-mono font-semibold text-slate-900 dark:text-white">Z</span>: trailer or chassis.</li>
+            </ul>
+            <p><span class="font-mono font-semibold text-slate-900 dark:text-white">R</span> is <strong>not</strong> a category. It belongs to the separate size/type code painted on the container, for example <span class="font-mono font-semibold text-slate-900 dark:text-white">22R1</span> or <span class="font-mono font-semibold text-slate-900 dark:text-white">45R1</span> for refrigerated (reefer) containers. A number such as <span class="font-mono font-semibold text-slate-900 dark:text-white">ABCR1234567</span> is therefore rejected.</p>
+          </div>
+        </details>
+        <details class="group border-t border-slate-200 first:border-t-0 dark:border-slate-700/80">
+          <summary class="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg px-5 py-4 text-left font-semibold text-slate-900 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-600 dark:text-white dark:hover:bg-slate-800/60 dark:focus-visible:ring-cyan-400 [&::-webkit-details-marker]:hidden">
+            <span>Common mistakes</span>
+            <svg class="h-4 w-4 shrink-0 text-slate-500 transition group-open:rotate-180 dark:text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <div class="space-y-3 px-5 pb-5 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+            <ul class="list-disc space-y-1 pl-5">
+              <li><strong>Letter O instead of zero 0</strong> (or <strong>I</strong> instead of <strong>1</strong>): the first 4 characters must be letters and the last 7 must be digits. <span class="font-mono font-semibold text-slate-900 dark:text-white">CSQU3<span class="font-sans underline decoration-red-600 decoration-2 underline-offset-2 dark:decoration-red-400">O</span>5438</span> (with the letter O, underlined) is malformed; <span class="font-mono font-semibold text-slate-900 dark:text-white">CSQU305438</span> is correct.</li>
+              <li><strong>Wrong category letter:</strong> the 4th character must be U, J or Z.</li>
+              <li><strong>Too short or too long:</strong> after spaces and hyphens are removed, the number must have 10 characters (to calculate) or 11 (to verify).</li>
+              <li><strong>Check digit 0 with a remainder of 10:</strong> valid, but ISO 6346 recommends avoiding serial numbers that produce it, so the app shows a note.</li>
+              <li><strong>Owner code not recognised:</strong> the app checks the format only. It does not look up the BIC register, so a well-formed code may still be unregistered.</li>
+            </ul>
+          </div>
+        </details>
+        <details class="group border-t border-slate-200 first:border-t-0 dark:border-slate-700/80">
+          <summary class="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg px-5 py-4 text-left font-semibold text-slate-900 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-600 dark:text-white dark:hover:bg-slate-800/60 dark:focus-visible:ring-cyan-400 [&::-webkit-details-marker]:hidden">
+            <span>Is my data stored or sent anywhere?</span>
+            <svg class="h-4 w-4 shrink-0 text-slate-500 transition group-open:rotate-180 dark:text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg>
+          </summary>
+          <div class="space-y-3 px-5 pb-5 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+            <p>No. Every check runs in your browser; nothing you type is sent to a server, and the app uses no cookies, analytics or tracking. Details are in the <a href="/legal" data-keep-theme class="font-semibold text-sky-700 underline underline-offset-2 dark:text-cyan-300">privacy &amp; legal notice</a>.</p>
+          </div>
+        </details>
+      </div>
+    </section>
   </main>
 
   <!-- =========================================================

@@ -6,94 +6,50 @@
 
 <div align="center">
 
-# ContainerCheck: ISO 6346 Container Check Digit Validator
+# ContainerCheck
 
-A fast, security-hardened web tool that calculates and verifies shipping container check digits. Check one number with live feedback, or a whole list at once.
+**ISO 6346 container check digit validator**: a static, client-side web app that calculates and verifies shipping container numbers, one at a time or in bulk.
 
-🔗 **[Live demo](https://containercheck.app/)**
+🔗 **[containercheck.app](https://containercheck.app/)**
 
 <img src="https://img.shields.io/badge/ISO-6346-0284c7" alt="ISO 6346">
 <img src="https://img.shields.io/badge/JavaScript-ES2022-f7df1e?logo=javascript&logoColor=black" alt="Vanilla JavaScript">
 <img src="https://img.shields.io/badge/Tailwind_CSS-4-06b6d4?logo=tailwindcss&logoColor=white" alt="Tailwind CSS 4">
 <img src="https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white" alt="Vite 6">
+<img src="https://img.shields.io/badge/Cloudflare-Workers-f38020?logo=cloudflare&logoColor=white" alt="Cloudflare Workers">
 <img src="https://img.shields.io/badge/CSP-strict_%2B_Trusted_Types-0f172a" alt="Strict CSP">
-<img src="https://img.shields.io/badge/npm_audit-0_vulnerabilities-16a34a" alt="0 vulnerabilities">
+<img src="https://img.shields.io/badge/WCAG-2.2_AA-16a34a" alt="WCAG 2.2 AA">
 <img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License">
 
 </div>
 
----
-
-## 📸 Preview
-
 <div align="center">
-  <img src="docs/images/screenshot_valid.png" alt="Single mode: valid container number" width="49%">
-  <img src="docs/images/screenshot_invalid.png" alt="Single mode: invalid check digit with suggested correction" width="49%">
-</div>
-<div align="center">
-  <img src="docs/images/screenshot_bulk_dark.png" alt="Bulk mode in dark theme" width="49%">
-  <img src="docs/images/screenshot_steps.png" alt="Step-by-step check digit calculation" width="49%">
+  <img src="docs/images/screenshot_invalid.png" alt="Single mode: invalid check digit with the suggested correction" width="49%">
+  <img src="docs/images/screenshot_bulk_dark.png" alt="Bulk mode in dark theme with validation results" width="49%">
 </div>
 
 ---
 
-## ✨ Features
+## Overview
 
-**Single mode (live validation)**
-- Converts input to uppercase as you type, and ignores spaces and hyphens (`CSQU 305438-3` works).
-- With **10 characters** it calculates the check digit. With **11** it verifies it and shows green or red, plus the correct digit and a one-click **Use corrected**.
-- A **breakdown panel** splits the code into Owner code (BIC), Category (`U` / `J` / `Z`), Serial number and Check digit. Each segment gets its own error message.
-- A **container marking plate** shows the number the way it is painted on a container.
-- **Step-by-step calculation**: value × 2ⁱ for each character, the sum, and mod 11.
+- **Single mode:** live validation as you type. It calculates the check digit from 10 characters or verifies it with 11, and shows a breakdown (owner code, category, serial, check digit) and the step-by-step calculation.
+- **Bulk mode:** validates up to 2,000 numbers per run, with filters and duplicate detection. Results export as CSV or as a list of corrected numbers.
+- **Built-in help:** user guidance lives in the app itself, in the *How to use* section of the page, so this repository carries no separate manual.
+- **Private by design:** everything runs in the browser, with no backend, cookies, analytics or storage. Installable as a PWA and works offline.
 
-**Bulk mode**
-- Paste many numbers separated by new lines, commas, semicolons or tabs, then press **Validate all** or `Ctrl + Enter`.
-- Summary counters (Valid, Invalid, Missing digit, Malformed), filter chips, and flags for duplicates.
-- **Copy as CSV**, **Download CSV**, **Copy corrected**, plus a copy button on every row.
+## Algorithm
 
-**General**
-- Light and dark theme: follows your OS, with a manual toggle that carries over to the legal page (nothing is stored).
-- Responsive and accessible (keyboard-navigable tabs, `aria-live` results) and installable as a PWA.
-- Deep links: `?c=CSQU3054383` pre-fills Single mode and `#bulk` opens Bulk mode.
-- **Private by design**: no backend, no tracking, nothing stored. Everything runs in your browser.
+Digits keep their value. Letters map to `A=10 … Z=38`, skipping multiples of 11. Each of the first 10 values is multiplied by 2⁰…2⁹, and the check digit is `sum mod 11`, where a remainder of 10 becomes `0`. Example: `CSQU305438` → sum 6,185 → **3**.
 
----
+Only the category identifiers `U`, `J` and `Z` are accepted. The implementation in `src/main.js` (§2) has been fuzz-tested against an independent implementation (200,000 random cases, 0 mismatches). Reference: [ISO 6346](https://en.wikipedia.org/wiki/ISO_6346) and [BIC](https://www.bic-code.org/identification-number/).
 
-## 🧮 How the ISO 6346 check digit works
+## Security, privacy and accessibility
 
-1. **Convert**: digits keep their value. Letters map to `A=10 … Z=38`, skipping multiples of 11 (11, 22, 33).
-2. **Weight**: multiply each of the first 10 values by 2⁰ … 2⁹ and add the results.
-3. **Modulo 11**: the check digit is `sum mod 11`. A remainder of 10 becomes `0`.
+- **Security:** strict CSP with Trusted Types (no `innerHTML`, `eval` or inline code), SRI on every script and stylesheet, HTTP security headers (`public/_headers`), and no third-party resources. Production dependencies: `npm audit --omit=dev` → 0. Full control matrix, accepted risks and hosting details: **[SECURITY.md](SECURITY.md)**.
+- **Privacy:** no personal data is processed by the app. The GDPR notice is at [containercheck.app/legal](https://containercheck.app/legal).
+- **Accessibility:** targets WCAG 2.2 AA. Checked with axe-core (0 violations, light and dark), keyboard tests, 320 px reflow, and a print stylesheet.
 
-Example: `CSQU305438` gives a sum of 6,185 and 6,185 mod 11 = **3**, so the full number is `CSQU3054383`.
-
-Category identifiers: `U` freight container, `J` detachable freight equipment, `Z` trailer or chassis. More on [ISO 6346](https://en.wikipedia.org/wiki/ISO_6346).
-
-### Example numbers
-| Input | Result |
-|---|---|
-| `CSQU3054383` | ✅ Valid |
-| `CSQU3054384` | ❌ Invalid. Expected `3` |
-| `MAEU845123` | ➕ Missing digit. Becomes `MAEU8451230` |
-| `ABCX1234567` | ⚠️ Malformed. `X` is not a valid category |
-
----
-
-## 🛡️ Security
-
-The app is hardened to OWASP client-side guidelines and is tested against XSS payloads, framing and resource tampering:
-
-- **No HTML string sinks.** The UI is built only with `createElement` and text nodes, and the browser enforces this through **Trusted Types**.
-- **Strict CSP**: `default-src 'none'`, scripts, styles and fonts only from `'self'`, no `unsafe-inline` or `unsafe-eval`.
-- **Zero third-party resources.** Tailwind is compiled at build time and fonts are self-hosted. Every script and stylesheet ships with **SRI** (`sha384`).
-- Anti-clickjacking, CSV formula-injection protection, input limits, and **no storage** (no localStorage, sessionStorage or cookies).
-- No runtime dependencies. `npm audit` reports **0 vulnerabilities**, and CI blocks deploys if a high-severity advisory appears.
-
-The full control matrix and hosting notes are in **[SECURITY.md](SECURITY.md)**.
-
----
-
-## 🧰 Tech stack
+## Tech stack
 
 | Layer | Choice |
 |---|---|
@@ -118,13 +74,12 @@ The full control matrix and hosting notes are in **[SECURITY.md](SECURITY.md)**.
 ├── wrangler.jsonc           # Cloudflare Worker: serve ./dist, no workers.dev / preview URLs
 ├── .github/workflows/
 │   └── ci.yml               # Audit + build check on every push / PR (no deploy rights)
-├── SECURITY.md
-└── MANUAL_USER.md
+└── SECURITY.md
 ```
 
 ---
 
-## 🚀 Getting started
+## Getting started
 
 **Prerequisites:** Node.js ≥ 20 and npm ≥ 9.
 
@@ -144,7 +99,7 @@ npm run dev        # http://localhost:5173/
 
 ---
 
-## 🌐 Deployment
+## Deployment
 
 Production is **https://containercheck.app**, served by a **Cloudflare Worker with static assets** (`iso-6346-container-validator`) and built from this repository. Every push to `main` is built and deployed automatically. The `*.workers.dev` and preview URLs are disabled in [`wrangler.jsonc`](wrangler.jsonc), so the site exists only on its own domain.
 
@@ -177,7 +132,7 @@ The domain has no email, so these records lock it down against spoofing:
 
 ---
 
-## 📡 Monitoring
+## Monitoring
 
 ContainerCheck is a static site with no server or database, so there is no `/health` endpoint. If the page is served, the app is available. External monitors (Olivia) check the published pages directly:
 
@@ -193,25 +148,13 @@ ContainerCheck is a static site with no server or database, so there is no `/hea
 
 ---
 
-## 📖 User manual
+## Contributing
 
-For step-by-step usage instructions, see **[MANUAL_USER.md](MANUAL_USER.md)**.
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository.
-2. Create a feature branch: `git checkout -b feature/amazing-feature`.
-3. Commit your changes: `git commit -m "Add amazing feature"`.
-4. Push the branch: `git push origin feature/amazing-feature`.
-5. Open a Pull Request.
-
-Please keep the security rules: no `innerHTML` or inline scripts, and no third-party CDNs.
+Fork, create a feature branch, and open a pull request. Please keep the security rules: no `innerHTML` or inline scripts, and no third-party CDNs. CI (`npm audit --audit-level=high` + build) must pass.
 
 ---
 
-## 👨‍💻 Author
+## Author
 
 **José Oldemar Chaves Urbina**
 - GitHub: [@OldemarCRC](https://github.com/OldemarCRC)
@@ -220,6 +163,6 @@ Please keep the security rules: no `innerHTML` or inline scripts, and no third-p
 
 ---
 
-## 📄 License
+## License
 
 MIT. See [LICENSE.md](LICENSE.md).
